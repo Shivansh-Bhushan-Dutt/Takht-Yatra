@@ -1,7 +1,7 @@
-node_modules/
-dist/
+node_modules
+dist
 .vite/
-.vercel/
+.vercel
 *.log
 npm-debug.log*
 pnpm-debug.log*
