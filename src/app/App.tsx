@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Download, Phone, Mail, Plane, CreditCard, Compass, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
+import { Download, Phone, Coffee, Sparkles, CreditCard, Compass, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function App() {
   const [openDay, setOpenDay] = useState<number | null>(1);
@@ -19,7 +19,6 @@ export default function App() {
     }
 
     const subject = 'Sri Panj Takht Sahib Yatra Enquiry';
-    const bodyText = `Name: ${enquiryName}\nContact Number: ${enquiryPhone}\nEmail: ${enquiryEmail}\nMessage:\n${enquiryMessage}`;
 
     // Save a copy in localStorage (captured)
     try {
@@ -30,88 +29,54 @@ export default function App() {
       console.warn('Could not save enquiry to localStorage', err);
     }
 
-    // Attempt server-side send first
-    (async () => {
-      try {
-        const resp = await fetch('/api/enquiry', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: enquiryName, phone: enquiryPhone, email: enquiryEmail, message: enquiryMessage }),
-        });
+    const form = document.createElement('form');
+    form.action = 'https://formsubmit.co/shivansh@immerseindiatours.com';
+    form.method = 'POST';
+    form.target = 'enquiry-submit-frame';
+    form.style.display = 'none';
 
-        if (resp.ok) {
-          setEnquiryName('');
-          setEnquiryPhone('');
-          setEnquiryEmail('');
-          setEnquiryMessage('');
-          alert('Enquiry submitted successfully.');
-          return;
-        }
-      } catch (err) {
-        console.warn('Server send failed, falling back to mailto', err);
-      }
+    const fields = [
+      ['name', enquiryName],
+      ['phone', enquiryPhone],
+      ['email', enquiryEmail],
+      ['message', enquiryMessage],
+      ['_subject', subject],
+      ['_captcha', 'false'],
+      ['_template', 'table'],
+    ];
 
-      // Fallback to mailto if server-side not available
-      const mailto = `mailto:shivansh@immerseindiatours.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyText)}`;
-      window.open(mailto);
-      setEnquiryName('');
-      setEnquiryPhone('');
-      setEnquiryEmail('');
-      setEnquiryMessage('');
-      setTimeout(() => alert('Enquiry captured and mail client opened (fallback). If neither worked, configure server SMTP.'), 200);
-    })();
+    fields.forEach(([key, value]) => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = key;
+      input.value = value;
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
+    form.remove();
+
+    setEnquiryName('');
+    setEnquiryPhone('');
+    setEnquiryEmail('');
+    setEnquiryMessage('');
+    alert('Enquiry submitted. We will contact you soon.');
   };
 
   // Download itinerary section as PDF (client-side)
   const downloadItineraryPDF = async () => {
+    // Serve the static Flyer.pdf from public folder to force a download
     try {
-      const { jsPDF } = await import('jspdf');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const marginX = 14;
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const usableWidth = pageWidth - marginX * 2;
-      let cursorY = 16;
-
-      const ensureSpace = (neededHeight: number) => {
-        if (cursorY + neededHeight > pageHeight - 16) {
-          pdf.addPage();
-          cursorY = 16;
-        }
-      };
-
-      const addHeading = (text: string, size: number, bold = true, gapAfter = 4) => {
-        pdf.setFont('helvetica', bold ? 'bold' : 'normal');
-        pdf.setFontSize(size);
-        const lines = pdf.splitTextToSize(text, usableWidth);
-        ensureSpace(lines.length * (size * 0.45) + gapAfter);
-        pdf.text(lines, marginX, cursorY);
-        cursorY += lines.length * (size * 0.45) + gapAfter;
-      };
-
-      const addParagraph = (text: string, size = 11, gapAfter = 4) => {
-        pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(size);
-        const lines = pdf.splitTextToSize(text, usableWidth);
-        ensureSpace(lines.length * (size * 0.45) + gapAfter);
-        pdf.text(lines, marginX, cursorY);
-        cursorY += lines.length * (size * 0.45) + gapAfter;
-      };
-
-      addHeading('Itinerary Overview: Panj Takht Yatra', 16);
-      addHeading('Dates: 05th – 16th October 2026', 12, true, 8);
-      addHeading('Day Wise Programme', 13, true, 6);
-
-      itineraryDays.forEach((day) => {
-        const title = `${String(day.day).padStart(2, '0')}th Oct-26 (Day ${day.day}): ${day.title}`;
-        addHeading(title, 11, true, 3);
-        addParagraph(day.description, 10, 8);
-      });
-
-      pdf.save('Panj-Takht-Yatra-Itinerary.pdf');
+      const a = document.createElement('a');
+      a.href = '/Flyer.pdf';
+      a.setAttribute('download', 'Panj-Takht-Yatra-Flyer.pdf');
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
     } catch (err) {
-      console.error('Error generating PDF', err);
-      alert('Could not generate PDF. Try reloading the page and allow images to load.');
+      console.error('Error triggering PDF download', err);
+      alert('Could not download Flyer. Please open /Flyer.pdf manually.');
     }
   };
 
@@ -149,7 +114,7 @@ export default function App() {
           {/* Logo */}
           <div className="h-full flex items-center">
             <img
-              src="/takht.png"
+              src="/Ptakht.png"
               alt="Takht Sahib"
               className="h-full w-auto object-contain"
             />
@@ -167,17 +132,22 @@ export default function App() {
           </nav>
 
           {/* Book Now Button */}
-          <button
-            onClick={() => scrollToSection('enquiry')}
-            className="px-6 py-2 bg-[#C9A961] text-[#1A1A1A] hover:bg-[#D4A574] transition-all duration-300 tracking-wide"
-          >
-            Book Now
-          </button>
+          <div className="flex items-center gap-4">
+            <span className="text-[#1A1A1A] font-medium">
+              0203 909 5800
+            </span>
+            <button
+              onClick={() => scrollToSection('enquiry')}
+              className="px-6 py-2 bg-[#C9A961] text-[#1A1A1A] hover:bg-[#D4A574] transition-all duration-300 tracking-wide"
+            >
+              Book Now
+            </button>
+          </div>
         </div>
-      </header>
+      </header> 
 
       {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden mt-16">
+      <section className="relative h-screen flex items-end justify-center overflow-hidden mt-16">
         <div className="absolute inset-0">
           <img
             src="https://images.unsplash.com/photo-1764782884713-08c039f92e71?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=2000"
@@ -187,7 +157,7 @@ export default function App() {
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/50" />
         </div>
 
-        <div className="relative z-10 text-center text-white px-6 max-w-5xl mx-auto">
+        <div className="relative z-10 text-center text-white px-6 max-w-5xl mx-auto mb-13">
           <h1 className="mb-6 tracking-wide text-[64px]" style={{ fontFamily: 'var(--font-serif)' }}>
             Sri Panj Takht Sahib Yatra
           </h1>
@@ -199,8 +169,6 @@ export default function App() {
           <div className="max-w-2xl mx-auto mb-12">
             
           </div>
-
-          
         </div>
       </section>
 
@@ -217,28 +185,28 @@ export default function App() {
                 <span className="text-base text-[#9A8F7E] line-through">£2350</span>
                 <span className="text-3xl" style={{ fontFamily: 'var(--font-serif)' }}>£2250<span className="text-sm align-top">*</span></span>
               </div>
-              <p className="text-sm text-[#6B5D4F] mt-2">Based on twin / triple share</p>
+              <p className="text-sm text-[#6B5D4F] mt-2">Valid Till 15th June</p>
             </div>
             <div className="text-center">
               <div className="w-16 h-16 mx-auto mb-4 bg-[#FAF7F2] rounded-full flex items-center justify-center">
-                <Download className="w-8 h-8 text-[#C9A961]" />
+                <Sparkles className="w-8 h-8 text-[#C9A961]" />
               </div>
               <p className="text-sm uppercase tracking-widest text-[#6B5D4F] mb-2">Experience</p>
               <p className="text-2xl" style={{ fontFamily: 'var(--font-serif)' }}>Spiritual Journey</p>
             </div>
             <div className="text-center">
               <div className="w-16 h-16 mx-auto mb-4 bg-[#FAF7F2] rounded-full flex items-center justify-center">
-                <Plane className="w-8 h-8 text-[#C9A961]" />
+                <Compass className="w-8 h-8 text-[#C9A961]" />
               </div>
-              <p className="text-sm uppercase tracking-widest text-[#6B5D4F] mb-2">Flights</p>
-              <p className="text-2xl" style={{ fontFamily: 'var(--font-serif)' }}>Included</p>
+              <p className="text-sm uppercase tracking-widest text-[#6B5D4F] mb-2">Guided Yatra</p>
+              <p className="text-2xl" style={{ fontFamily: 'var(--font-serif)' }}>Expert-led visits</p>
             </div>
             <div className="text-center">
               <div className="w-16 h-16 mx-auto mb-4 bg-[#FAF7F2] rounded-full flex items-center justify-center">
-                <Compass className="w-8 h-8 text-[#C9A961]" />
+                <Coffee className="w-8 h-8 text-[#C9A961]" />
               </div>
-              <p className="text-sm uppercase tracking-widest text-[#6B5D4F] mb-2">Experience</p>
-              <p className="text-2xl" style={{ fontFamily: 'var(--font-serif)' }}>Guided Yatra</p>
+              <p className="text-sm uppercase tracking-widest text-[#6B5D4F] mb-2">Meals & Stay</p>
+              <p className="text-2xl" style={{ fontFamily: 'var(--font-serif)' }}>Comfort & Langar</p>
             </div>
           </div>
         </div>
@@ -340,14 +308,38 @@ export default function App() {
 
       {/* Image Strip */}
       <section className="py-0">
-        <div className="grid grid-cols-5 gap-2 px-4">
-          {["/1.png", "/2.png", "/3.png", "/4.png", "/5.png"].map((src, index) => (
-            <img
-              key={index}
-              src={src}
-              alt={`Temple image ${index + 1}`}
-              className="w-full h-[240px] object-cover rounded-md"
-            />
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 px-4">
+          {[
+            {
+              src: "/1.png",
+              title: "Sri Harmandir Sahib, Patna",
+            },
+            {
+              src: "/2.png",
+              title: "Sri Hazur Sahib, Nanded",
+            },
+            {
+              src: "/3.png",
+              title: "Sri Kesgarh Sahib, Anandpur Sahib",
+            },
+            {
+              src: "/4.png",
+              title: "Sri Akal Takht Sahib, Amritsar",
+            },
+            {
+              src: "/5.png",
+              title: "Sri Damdama Sahib, Talwandi Sabo",
+            },
+          ].map((item, index) => (
+            <div key={index} className="text-center">
+              <img
+                src={item.src}
+                alt={item.title}
+                className="w-full h-[240px] object-cover rounded-md"
+              />
+
+              <p className="mt-3 text-[15px] text-[#6B5D4F] tracking-wide leading-snug" style={{ fontFamily: "var(--font-serif)" }} > {item.title} </p>
+            </div>
           ))}
         </div>
       </section>
@@ -363,9 +355,8 @@ export default function App() {
               <ul className="space-y-2 text-[#3A3A3A]">
                 <li className="text-[14px]">Return flights from London</li>
                 <li className="text-[15px]">All domestic flights</li>
-                <li className="text-[15px]">Airport transfers</li>
                 <li className="text-[15px]">Private coach transport</li>
-                <li className="text-[14px]">Experienced guide</li>
+                <li className="text-[14px]">Experienced Tour manager</li>
               </ul>
             </div>
             <div>
@@ -380,18 +371,18 @@ export default function App() {
             <div>
               <h3 className="text-xl mb-4 text-[#C9A961]" style={{ fontFamily: 'var(--font-serif)' }}>Experiences</h3>
               <ul className="space-y-2 text-[#3A3A3A]">
-                <li className="text-[14px]">All Five Takhts visits</li>
+                <li className="text-[15px]">All Five Takhts</li>
+                <li className="text-[14px]">Other Historical Gurudwaras</li>
                 <li className="text-[15px]">Guided Gurudwara tours</li>
-                <li className="text-[15px]">Evening prayers & kirtan</li>
-                <li className="text-[15px]">Langar participation</li>
-                <li className="text-[15px]">Historical insights</li>
+                <li className="text-[15px]">Special Darshans</li>
+                <li className="text-[15px]">Spiritual insights</li>
               </ul>
             </div>
             <div>
               <h3 className="text-xl mb-4 text-[#C9A961]" style={{ fontFamily: 'var(--font-serif)' }}>Meals</h3>
               <ul className="space-y-2 text-[#3A3A3A]">
                 <li className="text-[15px]">Daily breakfast</li>
-                <li className="text-[15px]">Selected lunches</li>
+                <li className="text-[15px]">Langar participation</li>
                 <li className="text-[15px]">Selected dinners</li>
                 <li className="text-[15px]">Vegetarian options</li>
               </ul>
@@ -414,7 +405,7 @@ export default function App() {
               <li className="text-[15px]">Expenses of personal nature</li>
               <li className="text-[15px]">Tips to driver, tour guide, helper, etc.</li>
               <li className="text-[14px]">Any item which is not mentioned in “Includes”.</li>
-              <li className="text-[15px]">Extension of stay or routing, like different return dates, etc.</li>
+              <li className="text-[14px]">Extension of stay or routing like different return dates, etc.</li>
             </ul>
           </div>
         </div>
@@ -484,9 +475,9 @@ export default function App() {
             </div>
           </form>
 
-          <p className="text-center text-sm text-[#6B5D4F] mt-8">
+          {/* <p className="text-center text-sm text-[#6B5D4F] mt-8">
             Or email us directly at <a href="mailto:info@sikhchannelyatras.com" className="text-[#C9A961] hover:underline">info@sikhchannelyatras.com</a>
-          </p>
+          </p> */}
         </div>
       </section>
 
@@ -509,24 +500,23 @@ export default function App() {
 
             <div>
               <h4 className="text-lg mb-4" style={{ fontFamily: 'var(--font-serif)' }}>Contact</h4>
-              <div className="space-y-2 text-sm opacity-80">
+              <div className="space-y-2 text-lg opacity-80">
                 <p className="flex items-center gap-2">
-                  <Phone className="w-4 h-4" />
+                  <Phone className="w-6 h-6" />
                   0203 909 5800
                 </p>
-                <p className="flex items-center gap-2">
+                {/* <p className="flex items-center gap-2">
                   <Mail className="w-4 h-4" />
                   info@sikhchannelyatras.com
-                </p>
+                </p> */}
               </div>
             </div>
 
             <div>
-              <h4 className="text-lg mb-4" style={{ fontFamily: 'var(--font-serif)' }}>Partner</h4>
-              <p className="text-sm opacity-80">
-                Sparrow Path<br />
-                Luxury Spiritual Travel
-              </p>
+              <h4 className="text-lg mb-4" style={{ fontFamily: 'var(--font-serif)' }}>Managed by <strong>Sparrow Path</strong></h4>
+              <div className="flex flex-col md:flex-row items-center md:items-start justify-between">
+                <img src="/sparrowpath.png" alt="Sparrow Path" className="h-10" />
+              </div>
             </div>
           </div>
 
@@ -537,10 +527,6 @@ export default function App() {
                 <img src="/atol.png" alt="ATOL" className="h-10" />
                 <img src="/channel.png" alt="Channel" className="h-10" />
                 <img src="/pts.png" alt="PTS" className="h-10" />
-                <img src="/sparrowpath.png" alt="Sparrow Path" className="h-10" />
-              </div>
-              <div className="text-right text-sm opacity-90">
-                <div>Managed by <strong>Sparrow Path</strong></div>
               </div>
             </div>
 
@@ -559,6 +545,8 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      <iframe name="enquiry-submit-frame" title="Enquiry submission frame" className="hidden" />
     </div>
   );
 }
