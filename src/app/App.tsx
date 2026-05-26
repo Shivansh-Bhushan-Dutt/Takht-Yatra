@@ -567,7 +567,7 @@ export default function App() {
               <div className="flex flex-col md:flex-row items-center gap-14 text-[14px]">
                 
                 <p className="text-center md:text-left max-w-3xl leading-relaxed">
-                  The holidays offered on SikhChannelYatras are a product powered and managed by Sparrow Path Ltd UK, a member of Protected Trust Services (PTS). All applicable bookings are protected under the ATOL 12960 licence held by Sparrow Path Ltd.
+                  The holidays offered on SikhChannelYatras are a product powered and managed by Sparrow Path Ltd. UK, a member of Protected Trust Services (PTS). All applicable bookings are protected under the ATOL 12960 licence held by Sparrow Path Ltd.
                 </p>
 
                 <div className="flex flex-col items-center gap-2 shrink-0">
