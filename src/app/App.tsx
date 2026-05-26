@@ -30,12 +30,7 @@ export default function App() {
     }
 
     const submitViaApi = async () => {
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      const endpoint = import.meta.env.VITE_ENQUIRY_ENDPOINT || (isLocalhost ? 'http://localhost:3001/api/enquiry' : '');
-
-      if (!endpoint) {
-        throw new Error('Enquiry endpoint not configured');
-      }
+      const endpoint = "/api/enquiry";
 
       const resp = await fetch(endpoint, {
         method: 'POST',
